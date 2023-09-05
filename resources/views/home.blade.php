@@ -10,7 +10,7 @@
     @guest
         <p>Clique em "Entrar" se você é aluno ou docente USP.</p>
 
-        <p>Caso contrário, <a href="{{ route('login.externo')}}">clique aqui</a> para fazer o login.</p>
+        <p>Caso seja <b>APOSENTADO</b> ou <b>SEM VÍNCULO</b> com a USP, <b><a href="{{ route('login.externo')}}">clique aqui</a></b> para fazer o login.</p>
     @endguest
 
 @endsection
