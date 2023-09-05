@@ -30,7 +30,7 @@
             <a class="skin_logo" href="http://143.107.172.21:8000">
                 <img src="{{ asset('/vendor/laravel-usp-theme/skins/eeusp/images/Logotipo-EEUSP.png') }}" alt="Logo da Escola de Enfermagem da USP" />
             </a>
-            <span class="skin_texto" style="text-align:-webkit-right;font-size:30px;font-weight:bold;right:10%;position:relative;width:100%;height:10px;display:block;bottom:60%;">
+            <span class="skin_texto" style="text-align:-webkit-right;font-size:30px;font-weight:bold;right:10%;position:relative;width:100%;height:10px;display:block;bottom:60%;text-align:right;">
                 {{ env("APP_NAME") }}
                 
             </span>

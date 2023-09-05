@@ -13,6 +13,8 @@ use App\Models\Monografia;
 use App\Models\MonoOrientadores;
 use App\Models\User;
 
+use App\Rules\validaCPF;
+
 use Illuminate\Support\Facades\Mail;
 use App\Mail\NotificacaoAluno;
 use App\Mail\NotificacaoOrientador;
@@ -86,8 +88,8 @@ class OrientadorController extends Controller
         $rules = [];
         if ($request->input('externo')) {
             $objRemovido = Orientador::onlyTrashed()->where('CPF',$request->input('cpfOrientador'))->get();
-
-            $rules['cpfOrientador'] = "required";
+            
+            $rules['cpfOrientador'] = ["required",new validaCPF];
             $messages['cpfOrientador.required'] = "Favor informar o CPF do Orientador";
             $externo = 1;
         } else {
@@ -104,6 +106,7 @@ class OrientadorController extends Controller
         $messages['required']   = "Favor informar o :attribute do orientador.";
         $messages['min']        = "O :attribute deve conter no mínimo :min caracteres";
         $messages['max']        = "O :attribute deve conter no mínimo :max caracteres";
+        $messages['email']      = "O :attribute deve conter um e-mail válido.";
 
         $request->validate($rules,$messages);
 
@@ -114,10 +117,15 @@ class OrientadorController extends Controller
             $orientador = $objRemovido->first();
             $atualiza = true;
         } else {
-            $orientador = new Orientador;
+            $orientador = Orientador::where('email',$request->input('emailOrientador'))->get();
+            if ($orientador->isEmpty()){
+                $orientador = new Orientador;
+            } else {
+                $orientador = $orientador->first();
+                $atualiza = true;
+            }
         }
 
-        $orientador->codpes = $request->input('nuspOrientador');
         $orientador->nome = $request->input('nomeOrientador');
         $orientador->email = $request->input('emailOrientador');
         if ($externo == 1)
@@ -128,13 +136,19 @@ class OrientadorController extends Controller
             $orientador->externo = $externo;
             $orientador->save();
         } else {
+            $orientador->codpes = $request->input('nuspOrientador');
             $orientador->update();        
         }
         if ($externo == 1) {
-            $user = User::create(['name'=>$orientador->nome
-                                ,'email'=>$orientador->email
-                                ,'password'=>$orientador->password]
-                                );
+            $user = User::where('email',$orientador->email)->get();
+            if ($user->isEmpty()) {
+                $user = User::create(['name'=>$orientador->nome
+                                    ,'email'=>$orientador->email
+                                    ,'password'=>$orientador->password]
+                                    );
+            } else {
+                $user = $user->first();
+            }
 
             if (!$user->hasRole('orientador')) 
                 $user->assignRole('orientador');

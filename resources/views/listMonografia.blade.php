@@ -2,6 +2,10 @@
 
 @section('content')
 
+@if (!empty($msg)) 
+<script>alert("{{ $msg }}"); </script>
+@endif
+
 <h1 style="text-align:center;">Lista de Monografias @if ($userLogado == "Orientador") para avaliação @endif </h1>
 
 <table class="tableData" id="listMonografias" border="1">
@@ -75,8 +79,9 @@
 <script>
     $( document ).ready(function(){
 
-        $("#filtro").keyup(function() {
-            if ($(this).val().length > 3) {
+        $("#filtro").keyup(function( event ) {
+            if (event.which == 13) {
+            //if ($(this).val().length > 3) {
                 document.getElementById("filtrarMonografia").submit();
             }
         });

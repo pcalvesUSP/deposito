@@ -6,7 +6,7 @@
 
 <div style="width:70%;margin:0 250px 0 250px">
 <p style="align:right"><a href={{ route('unitermos.create') }}>Cadastrar Novo</a></p>
-<h1>Unitermos</h1>
+<h1>Palavras-Chave</h1>
 <table class="tableData" >
     <thead>
         <form id="filtrarUnitermos" action="{{ route('unitermos.busca') }}" method="post">
@@ -16,7 +16,7 @@
             </tr>
             </form>
         <tr>
-            <th style="width:50%;" class="tableData">Unitermo</th>
+            <th style="width:50%;" class="tableData">Palavra-chave</th>
             <th style="width:50%;" class="tableData" colspan="2">A&ccedil;&otilde;es</th>
         </tr>
     </thead>
@@ -48,8 +48,9 @@
 
     $( document ).ready(function(){
 
-        $("#filtro").keyup(function() {
-            if ($(this).val().length > 3) {
+        $("#filtro").keyup(function( event ) {
+            if (event.which == 13) {
+            //if ($(this).val().length > 3) {
                 document.getElementById("filtrarUnitermos").submit();
             }
         });

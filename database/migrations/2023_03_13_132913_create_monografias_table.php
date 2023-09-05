@@ -18,11 +18,14 @@ class CreateMonografiasTable extends Migration
             $table->timestamps();
             $table->boolean('dupla')->default(0);
             $table->enum('status', ['EM ANDAMENTO', 'CONCLUIDO'])->default("EM ANDAMENTO");
+            $table->mediumText('colaboradores');
             $table->text('titulo');
             $table->text('resumo');
             $table->boolean('publicar')->nullable();
             $table->string('template_apres', 250);
             $table->string('ano', 4);
+
+            $table->index('ano');
         });
     }
 

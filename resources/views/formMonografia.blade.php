@@ -73,7 +73,7 @@
       <br/>
       @if (empty($dadosMonografia))
         <div class="campo">
-          <label for="orientador_secundario_id">Selecione o(s) orientador(es) secundário(s), se houver:</label>
+          <label for="orientador_secundario_id">Selecione o(s) co-orientador(es), se houver:</label>
           <div id="orientadorSecundario">
             <select name="orientador_secundario_id_1" id="orientador_secundario_id_1" @if ($readonly) tabindex="-1" aria-disabled="true" class="selectReadonly" @endif>
               <option value="">Selecione</option>
@@ -94,18 +94,24 @@
         {{ $list }}<br/>
         @endforeach
       @else
-        <div style="width:30%;margin-left:10px;margin-right:auto;font-weight:bold;">NÃO HÁ ORIENTADOR SECUNDÁRIO</div>
+        <div style="width:30%;margin-left:10px;margin-right:auto;font-weight:bold;">NÃO HÁ CO-ORIENTADOR</div>
       @endif
-
+      <div class="campo">
+        <label for="colaboradores">Colaboradores (opcional, digitar todos os nomes <b>separados por vírgula</b>):</label> 
+        <textarea onfocus="$(this).val($(this).val().trim());" name="colaboradores" id="colaboradores" rows="5" cols="150" @if ($readonly) class="inputReadonly" readonly @endif>
+          @if (isset($dadosMonografia->colaboradores)) {{ $dadosMonografia->colaboradores }} @else {{ trim(old('colaboradores')) }} @endif
+        </textarea>
+        <div class="erro">{{ $errors->has('colaboradores') ? $errors->first('colaboradores'):null }}</div><br/>
+      </div>
       <div class="campo">
         <label for="titulo"> T&iacute;tulo: </label>
-        <input type="text" name="titulo" id="titulo" maxlength="255" size="90"
+        <input onfocus="$(this).val($(this).val().trim());" type="text" name="titulo" id="titulo" maxlength="255" size="90"
              value="@if (isset($dadosMonografia->titulo)) {{ $dadosMonografia->titulo }} @else {{ trim(old('titulo')) }} @endif" required @if ($readonly) class="inputReadonly" readonly @endif>
         <div class="erro">{{  $errors->has('titulo') ? $errors->first('titulo'):null }}</div><br/>
       </div>
       <div class="campo">
         <label for="resumo">Resumo:</label> 
-        <textarea name="resumo" id="resumo" rows="10" cols="150" required @if ($readonly) class="inputReadonly" readonly @endif>
+        <textarea onfocus="$(this).val($(this).val().trim());" name="resumo" id="resumo" rows="10" cols="150" required @if ($readonly) class="inputReadonly" readonly @endif>
           @if (isset($dadosMonografia->resumo)) {{$dadosMonografia->resumo }} @else {{ trim(old('resumo')) }} @endif
         </textarea>
         <div class="erro">{{ $errors->has('resumo') ? $errors->first('resumo'):null }}</div><br/>
@@ -124,21 +130,23 @@
       @endif
       
       @if (isset($dadosMonografia->template_apres)) 
-        <a href="upload/{{ $dadosMonografia->template_apres }}">Baixar o trabalho</a>
+        <b><a href="upload/{{ $dadosMonografia->template_apres }}">Baixar o trabalho</a></b>
       @endif
       @if (!$readonly && $userLogado != "Graduacao")
       <div class="campo">
         <label for="template_apres">Arquivo do TCC: </label><input type="file" name="template_apres" id="template_apres">
+        <div class="erro">{{  $errors->has('template_apres') ? $errors->first('template_apres'):null }}</div>
       </div>
       <br/>
       @endif
 
       <div class="campo">
-        <label for="unitermo1">Descritor 1 (Palavra Chave):<br/>Tenha certeza que não existe na lista antes de cadastrar um novo. </label>
+        <label for="unitermo1">Palavra-chave 1:<br/>Tenha certeza que não existe na lista antes de cadastrar um novo. </label>
         <div style="float:left;">
-        <select name="unitermo1" id="unitermo1" @if ($readonly) class="js-example-disabled-results" @else class="js-example-basic-single" @endif>
-            <optgroup label="Descritor 1">
+        <select name="unitermo1" id="unitermo1" @if ($readonly) tabindex="-1" aria-disabled="true" class="selectReadonly" @endif>
+            <optgroup label="Palavra Chave 1">
             <option value="">Selecione</option>
+            
             @foreach ($unitermos as $objUnitermos)
             <option value="{{ $objUnitermos->id }}" 
               @if (old('unitermo1') == $objUnitermos->id || (!empty($dadosMonografia) && isset($dadosUnitermos[0]) && $dadosUnitermos[0]->id == $objUnitermos->id)) selected @endif>
@@ -159,10 +167,10 @@
       <br/>
       
       <div class="campo">
-        <label for="unitermo2">Descritor 2 (Palavra Chave):<br/>Tenha certeza que não existe na lista antes de cadastrar um novo. </label>
+        <label for="unitermo2">Palavra-chave 2:<br/>Tenha certeza que não existe na lista antes de cadastrar um novo. </label>
         <div style="float:left;">
         <select name="unitermo2" id="unitermo2" @if ($readonly) tabindex="-1" aria-disabled="true" class="selectReadonly" @endif>
-            <optgroup label="Descritor 2">
+            <optgroup label="Palavra Chave 2">
             <option value="">Selecione</option>
             @foreach ($unitermos as $objUnitermos)
             <option value="{{ $objUnitermos->id }}" 
@@ -184,10 +192,10 @@
       <br/>
       
       <div class="campo">
-        <label for="unitermo3">Descritor 3 (Palavra Chave):<br/>Tenha certeza que não existe na lista antes de cadastrar um novo. </label>
+        <label for="unitermo3">Palavra Chave 3:<br/>Tenha certeza que não existe na lista antes de cadastrar um novo. </label>
         <div style="float:left;">
         <select name="unitermo3" id="unitermo3" @if ($readonly) tabindex="-1" aria-disabled="true" class="selectReadonly" @endif>
-            <optgroup label="Descritor 3">
+            <optgroup label="Palavra chave 3">
             <option value="">Selecione</option>
             @foreach ($unitermos as $objUnitermos)
             <option value="{{ $objUnitermos->id }}" 
@@ -209,10 +217,10 @@
       <br/>
 
       <div class="campo">
-        <label for="unitermo4">Descritor 4 (Palavra Chave) opcional:<br/>Tenha certeza que não existe na lista antes de cadastrar um novo. </label>
+        <label for="unitermo4">Palavra Chave 4 (opcional):<br/>Tenha certeza que não existe na lista antes de cadastrar um novo. </label>
         <div style="float:left;">
         <select name="unitermo4" id="unitermo4" @if ($readonly) tabindex="-1" aria-disabled="true" class="selectReadonly" @endif>
-            <optgroup label="Descritor 4">
+            <optgroup label="Palavra chave 4">
             <option value="">Selecione</option>
             @foreach ($unitermos as $objUnitermos)
             <option value="{{ $objUnitermos->id }}" 
@@ -233,10 +241,10 @@
       <br/>
 
       <div class="campo">
-        <label for="unitermo5">Descritor 5 (Palavra Chave) opcional:<br/>Tenha certeza que não existe na lista antes de cadastrar um novo. </label>
+        <label for="unitermo5">Palavra Chave 5 (opcional):<br/>Tenha certeza que não existe na lista antes de cadastrar um novo. </label>
         <div style="float:left;">
         <select name="unitermo5" id="unitermo5" @if ($readonly) tabindex="-1" aria-disabled="true" class="selectReadonly" @endif>
-            <optgroup label="Descritor 5">
+            <optgroup label="Palavra Chave 5">
             <option value="">Selecione</option>
             @foreach ($unitermos as $objUnitermos)
             <option value="{{ $objUnitermos->id }}" 

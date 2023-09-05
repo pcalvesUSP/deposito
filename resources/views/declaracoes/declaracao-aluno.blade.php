@@ -53,7 +53,7 @@
     <div class="container">
         <div class="row justify-content-start">
             <div class="col-3">
-               <img src="http://www.ee.usp.br/novamonografia/application/views/certificado/img/logo.jpg"><br><br>
+               <img src="{{ asset('/vendor/laravel-usp-theme/skins/eeusp/images/LogoEE.jpg') }}"><br><br>
             </div>  
             <div class="col-6">
                 <h2>Escola de Enfermagem<br> Universidade de São Paulo</h2>               

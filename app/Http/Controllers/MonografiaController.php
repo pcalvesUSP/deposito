@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
-
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\Monografia;
@@ -48,6 +48,10 @@ class MonografiaController extends Controller
      */
     public function index($monografia_id = 0, $ano = null, $msg = null, $acao = null)
     {        
+        
+        if (!empty($msg)) {
+            print '<script>alert("'.$msg.'");</script>';
+        }
         $dadosParam = Parametro::where("ano",date("Y"))->whereNull('codpes')->get();
         if (!$dadosParam->isEmpty()) {
             $dadosParam->first()->dataAberturaDiscente = date_create($dadosParam->first()->dataAberturaDiscente);
@@ -183,6 +187,7 @@ class MonografiaController extends Controller
         
         $dadosOrientadores = array();
         $unitermos = Unitermo::where('unitermo','like','%')->orderBy('unitermo')->get();
+        //$unitermos = Unitermo::all()->orderBy('unitermo')->get();
         $areas_tematicas = AreasTematica::where('descricao','like','%')->orderBy('descricao')->get();
         
         $orientadorId = 0;
@@ -218,6 +223,7 @@ class MonografiaController extends Controller
                     $dadosAvaliacoes->first()->dataAvaliacao = date_create($dadosAvaliacoes->first()->dataAvaliacao);
                     $dadosAvaliacoes->_orientador = $avOrientador->codpes." ".$avOrientador->nome;
                 }
+                $unitermos = Unitermo::where('unitermo','like','%')->orderBy('unitermo')->withTrashed()->get();
             } else {
                 $dadosAvaliacoes = Avaliacao::where("monografia_id",$dadosMonografia->id)
                                             ->where("status","DEVOLVIDO")->get();
@@ -292,6 +298,7 @@ class MonografiaController extends Controller
         }
 
         $rules['orientador_id']     = "required";
+        $rules['colaboradores']     = "max:16000";
         $rules['titulo']            = ["required","min:3","max:255"];
         $rules['resumo']            = ["required","min:3",new CountWord];
         if (!$request->filled('txtUnitermo1'))
@@ -300,16 +307,23 @@ class MonografiaController extends Controller
             $rules['unitermo2']     = ["required", "exists:unitermos,id"];
         if (!$request->filled('txtUnitermo3'))
             $rules['unitermo3']     = ["required", "exists:unitermos,id"];
-        //$rules['unitermo4']         = ["exists:unitermos,id"];
-        //$rules['unitermo5']         = ["exists:unitermos,id"];
+        //$rules['unitermo4']         = ["sometimes","exists:unitermos,id"];
+        //$rules['unitermo5']         = ["sometimes","exists:unitermos,id"];
         $rules['template_apres']   = ["file","required"];
         $rules['cod_area_tematica'] = ["required", "exists:areastematicas,id"];
         
         $messages['required']                 = "Favor informar o :attribute da monografia.";
-        $messages['min']                      = "O :attribute deve conter no mínimo 3 caracteres";
-        $messages['titulo.max']               = "O título deve conter no máximo 255 caracteres";
+        $messages['required.unitermo1']       = "Favor informar a palavra chave 1 da monografia.";
+        $messages['required.unitermo2']       = "Favor informar a palavra chave 2 da monografia.";
+        $messages['required.unitermo3']       = "Favor informar a palavra chave 3 da monografia.";
+        $messages['min']                      = "O :attribute deve conter no mínimo :min caracteres";
+        $messages['max']                      = "O título deve conter no máximo :max caracteres";
         $messages['cod_area_tematica.exists'] = "A área temática deve estar previamente cadastrada no sistema";
-        $messages['exists']                   = "O :attribute deve estar previamente cadastrado.";
+        $messages['exists.unitermo1']         = "A palavra chave 1 deve estar previamente cadastrado.";
+        $messages['exists.unitermo2']         = "A palavra chave 2 deve estar previamente cadastrado.";
+        $messages['exists.unitermo3']         = "A palavra chave 3 deve estar previamente cadastrado.";
+        $messages['exists.unitermo4']         = "A palavra chave 4 deve estar previamente cadastrado.";
+        $messages['exists.unitermo5']         = "A palavra chave 5 deve estar previamente cadastrado.";
         $messages['template_apres.file']      = "O arquivo da monografia não é válido";
         $messages['template_apres.required']  = "O arquivo da monografia deve ser informado.";
 
@@ -330,6 +344,7 @@ class MonografiaController extends Controller
 
             $monografia = new Monografia();
             $monografia->dupla             = empty($request->input('dupla'))?0:1;
+            $monografia->colaboradores     = $request->input('colaboradores');
             $monografia->titulo            = $request->input('titulo');
             $monografia->resumo            = $request->input('resumo');
             $monografia->template_apres    = $arquivo->getClientOriginalName();
@@ -383,43 +398,94 @@ class MonografiaController extends Controller
             }
 
             if ($request->filled('txtUnitermo1')) {
-                $unitermo = Unitermo::create(['unitermo'=>$request->input('txtUnitermo1')]);
-                $unitermo->monografia()->save($monografia);
+                $unitermo1 = Unitermo::create(['unitermo'=>$request->input('txtUnitermo1')]);
             } else {
-                $unitermo = Unitermo::find($request->input('unitermo1'));
-                $unitermo->monografia()->save($monografia);
+                $unitermo1 = Unitermo::find($request->input('unitermo1'));
             }
 
             if ($request->filled('txtUnitermo2')) {
-                $unitermo = Unitermo::create(['unitermo'=>$request->input('txtUnitermo2')]);
-                $unitermo->monografia()->save($monografia);
+                $unitermo2 = Unitermo::create(['unitermo'=>$request->input('txtUnitermo2')]);
             } else {
-                $unitermo = Unitermo::find($request->input('unitermo2'));
-                $unitermo->monografia()->save($monografia);
+                $unitermo2 = Unitermo::find($request->input('unitermo2'));
             }
 
             if ($request->filled('txtUnitermo3')) {
-                $unitermo = Unitermo::create(['unitermo'=>$request->input('txtUnitermo3')]);
-                $unitermo->monografia()->save($monografia);
+                $unitermo3 = Unitermo::create(['unitermo'=>$request->input('txtUnitermo3')]);
             } else {
-                $unitermo = Unitermo::find($request->input('unitermo3'));
-                $unitermo->monografia()->save($monografia);
+                $unitermo3 = Unitermo::find($request->input('unitermo3'));
             }            
 
             if ($request->filled('unitermo4')) {
-                $unitermo = Unitermo::find($request->input('unitermo4'));
-                $unitermo->monografia()->save($monografia);
+                $unitermo4 = Unitermo::find($request->input('unitermo4'));
             } elseif ($request->filled('txtUnitermo4')) {
-                $unitermo = Unitermo::create(['unitermo'=>$request->input('txtUnitermo4')]);
-                $unitermo->monografia()->save($monografia);
+                $unitermo4 = Unitermo::create(['unitermo'=>$request->input('txtUnitermo4')]);
             }
 
             if ($request->filled('unitermo5')) {
-                $unitermo = Unitermo::find($request->input('unitermo5'));
-                $unitermo->monografia()->save($monografia);
+                $unitermo5 = Unitermo::find($request->input('unitermo5'));
             } elseif ($request->filled('txtUnitermo5')) {
-                $unitermo = Unitermo::create(['unitermo'=>$request->input('txtUnitermo5')]);
-                $unitermo->monografia()->save($monografia);
+                $unitermo5 = Unitermo::create(['unitermo'=>$request->input('txtUnitermo5')]);
+            }
+
+            if ($unitermo1->unitermo <> $unitermo2->unitermo &&
+                $unitermo1->unitermo <> $unitermo3->unitermo  
+            ) {
+                if((!empty($unitermo4->unitermo) && $unitermo1->unitermo <> $unitermo4->unitermo) ||
+                   (!empty($unitermo5->unitermo) && $unitermo1->unitermo <> $unitermo5->unitermo) ||
+                   (empty($unitermo4->unitermo) && empty($unitermo5->unitermo))) {
+                    $unitermo1->monografia()->save($monografia);
+                } else {
+                    return Redirect::back()->withErrors(['unitermo1'=>'O campo Palavra-chave 1 não pode ser repetido']);
+                } 
+            } else {
+                return Redirect::back()->withErrors(['unitermo1'=>'O campo Palavra-chave 1 não pode ser repetido']);
+            }
+            if ($unitermo2->unitermo <> $unitermo1->unitermo &&
+                $unitermo2->unitermo <> $unitermo3->unitermo  
+            ) {
+                if((!empty($unitermo4->unitermo) && $unitermo2->unitermo <> $unitermo4->unitermo) ||
+                   (!empty($unitermo5->unitermo) && $unitermo2->unitermo <> $unitermo5->unitermo) ||
+                   (empty($unitermo4->unitermo) && empty($unitermo5->unitermo))) {
+                    $unitermo2->monografia()->save($monografia);
+                } else {
+                    return Redirect::back()->withErrors(['unitermo2'=>'O campo Palavra-chave 2 não pode ser repetido']);
+                }
+                 
+            } else {
+                return Redirect::back()->withErrors(['unitermo2'=>'O campo Palavra-chave 2 não pode ser repetido']);
+            }
+            if ($unitermo3->unitermo <> $unitermo1->unitermo &&
+                $unitermo3->unitermo <> $unitermo2->unitermo  
+            ) {
+                if((!empty($unitermo4->unitermo) && $unitermo3->unitermo <> $unitermo4->unitermo) ||
+                   (!empty($unitermo5->unitermo) && $unitermo3->unitermo <> $unitermo5->unitermo) ||
+                   (empty($unitermo4->unitermo) && empty($unitermo5->unitermo))) {
+                    $unitermo3->monografia()->save($monografia);
+                } else {
+                    return Redirect::back()->withErrors(['unitermo3'=>'O campo Palavra-chave 3 não pode ser repetido']);
+                }
+            } else {
+                return Redirect::back()->withErrors(['unitermo3'=>'O campo Palavra-chave 3 não pode ser repetido']);
+            }
+            if (!empty($unitermo4->unitermo) &&
+                $unitermo4->unitermo <> $unitermo1->unitermo &&
+                $unitermo4->unitermo <> $unitermo2->unitermo &&
+                $unitermo4->unitermo <> $unitermo3->unitermo) {
+
+                if((!empty($unitermo5->unitermo) && $unitermo4->unitermo <> $unitermo5->unitermo) ||
+                   (empty($unitermo5->unitermo))) {
+                    $unitermo4->monografia()->save($monografia);
+                }
+            }
+            if (!empty($unitermo5->unitermo) &&
+                $unitermo5->unitermo <> $unitermo1->unitermo &&
+                $unitermo5->unitermo <> $unitermo2->unitermo &&
+                $unitermo5->unitermo <> $unitermo3->unitermo) {
+
+                if((!empty($unitermo4->unitermo) && $unitermo5->unitermo <> $unitermo4->unitermo) ||
+                   (empty($unitermo4->unitermo))) {
+                    $unitermo5->monografia()->save($monografia);
+                }
             }
 
             //Envio de e-mail para todos os Orientadores
@@ -505,8 +571,9 @@ class MonografiaController extends Controller
     {
         $objMonografia = Monografia::find($id);
         $mensagem = null;
-        $rules = [];
+        $rules = []; 
         
+        $rules['colaboradores']     = ["max:16000"];
         $rules['titulo']            = ["required","min:3","max:255"];
         $rules['resumo']            = ["required","min:3",new CountWord];
         if (!$request->filled('txtUnitermo1'))
@@ -515,17 +582,27 @@ class MonografiaController extends Controller
             $rules['unitermo2']     = ["required", "exists:unitermos,id"];
         if (!$request->filled('txtUnitermo3'))
             $rules['unitermo3']     = ["required", "exists:unitermos,id"];
-        //$rules['unitermo4']         = ["exists:unitermos,id"];
-        //$rules['unitermo5']         = ["exists:unitermos,id"];
-        $rules['template_apres']    = ["file"];
+        //$rules['unitermo4']         = ["sometimes","exists:unitermos,id"];
+        //$rules['unitermo5']         = ["sometimes","exists:unitermos,id"];
+        if (empty($objMonografia->template_apres))
+            $rules['template_apres']   = ["file","required"];
         $rules['cod_area_tematica'] = ["required", "exists:areastematicas,id"];
-
+        
         $messages['required']                 = "Favor informar o :attribute da monografia.";
+        $messages['required.unitermo1']       = "Favor informar a palavra chave 1 da monografia.";
+        $messages['required.unitermo2']       = "Favor informar a palavra chave 2 da monografia.";
+        $messages['required.unitermo3']       = "Favor informar a palavra chave 3 da monografia.";
         $messages['min']                      = "O :attribute deve conter no mínimo :min caracteres";
-        $messages['max']                      = "O :attibute deve conter no máximo :max caracteres";
+        $messages['max']                      = "O :attribute deve conter no máximo :max caracteres";
         $messages['cod_area_tematica.exists'] = "A área temática deve estar previamente cadastrada no sistema";
-        $messages['template_apres.file']      = "O arquivo da monografia informado não é válido";
-
+        $messages['exists.unitermo1']         = "A palavra chave 1 deve estar previamente cadastrado.";
+        $messages['exists.unitermo2']         = "A palavra chave 2 deve estar previamente cadastrado.";
+        $messages['exists.unitermo3']         = "A palavra chave 3 deve estar previamente cadastrado.";
+        $messages['exists.unitermo4']         = "A palavra chave 4 deve estar previamente cadastrado.";
+        $messages['exists.unitermo5']         = "A palavra chave 5 deve estar previamente cadastrado.";
+        $messages['template_apres.file']      = "O arquivo da monografia não é válido";
+        $messages['template_apres.required']  = "O arquivo da monografia deve ser informado.";
+        
         $request->validate($rules,$messages);
 
         if ($request->hasFile('template_apres') && $request->file('template_apres')->isValid()) {
@@ -538,8 +615,9 @@ class MonografiaController extends Controller
         }
         
         try {
-            $objMonografia->titulo = $request->input('titulo');
-            $objMonografia->resumo = $request->input('resumo');
+            $objMonografia->colaboradores = $request->input('colaboradores');
+            $objMonografia->titulo        = $request->input('titulo');
+            $objMonografia->resumo        = $request->input('resumo');
             $objMonografia->areastematicas_id = $request->input('cod_area_tematica');
             if (!empty($nomeArq)) {
                 if (!empty($objMonografia->template_apres) && $nomeArq != $objMonografia->template_apres) {
@@ -589,34 +667,87 @@ class MonografiaController extends Controller
             $unitermos = array();
 
             if (empty($unitermo1->id)) {
-                $mensagem.= "O Descritor 1 não foi alterado pois o selecionado foi excluído das opções do sistema.";
+                $mensagem.= "A Palavra Chave 1 não foi alterado pois o selecionado foi excluído das opções do sistema.";
                 $noDelete[] = $request->input('unitermo1');
             } else {
-                $unitermos[] = $unitermo1;
+                if ($unitermo1->unitermo <> $unitermo2->unitermo &&
+                    $unitermo1->unitermo <> $unitermo3->unitermo  
+                ) {
+                    if((isset($unitermo4->unitermo) && $unitermo1->unitermo <> $unitermo4->unitermo) ||
+                    (isset($unitermo5->unitermo) && $unitermo1->unitermo <> $unitermo5->unitermo) ||
+                    (!isset($unitermo4->unitermo) && !isset($unitermo5->unitermo))) {
+                        $unitermos[] = $unitermo1;
+                    } else {
+                        return Redirect::back()->withErrors(['unitermo1'=>'O campo Palavra-chave 1 não pode ser repetido']);
+                    } 
+                } else {
+                    return Redirect::back()->withErrors(['unitermo1'=>'O campo Palavra-chave 1 não pode ser repetido']);
+                }
             }
             if (empty($unitermo2->id)) {
-                $mensagem.= "O Descritor 2 não foi alterado pois o selecionado foi excluído das opções do sistema.";
+                $mensagem.= "A Palavra Chave 2 não foi alterado pois o selecionado foi excluído das opções do sistema.";
                 $noDelete[] = $request->input('unitermo2');
             } else {
-                $unitermos[] = $unitermo2;
+                if ($unitermo2->unitermo <> $unitermo1->unitermo &&
+                    $unitermo2->unitermo <> $unitermo3->unitermo  
+                ) {
+                    if((isset($unitermo4->unitermo) && $unitermo2->unitermo <> $unitermo4->unitermo) ||
+                    (isset($unitermo5->unitermo) && $unitermo2->unitermo <> $unitermo5->unitermo) ||
+                    (!isset($unitermo4->unitermo) && !isset($unitermo5->unitermo))) {
+                        $unitermos[] = $unitermo2;
+                    } else {
+                        return Redirect::back()->withErrors(['unitermo2'=>'O campo Palavra-chave 2 não pode ser repetido']);
+                    }
+                } else {
+                    return Redirect::back()->withErrors(['unitermo2'=>'O campo Palavra-chave 2 não pode ser repetido']);
+                }
             }
             if (empty($unitermo3->id)) {
-                $mensagem.= "O Descritor 3 não foi alterado pois o selecionado foi excluído das opções do sistema.";
+                $mensagem.= "A Palavra Chave 3 não foi alterado pois o selecionado foi excluído das opções do sistema.";
                 $noDelete[] = $request->input('unitermo3');
             } else {
-                $unitermos[] = $unitermo3;
+                if ($unitermo3->unitermo <> $unitermo1->unitermo &&
+                    $unitermo3->unitermo <> $unitermo2->unitermo  
+                ) {
+                    if((isset($unitermo4->unitermo) && $unitermo3->unitermo <> $unitermo4->unitermo) ||
+                    (isset($unitermo5->unitermo) && $unitermo3->unitermo <> $unitermo5->unitermo) ||
+                    (!isset($unitermo4->unitermo) && !isset($unitermo5->unitermo))) {
+                        $unitermos[] = $unitermo3;
+                    } else {
+                        return Redirect::back()->withErrors(['unitermo3'=>'O campo Palavra-chave 3 não pode ser repetido']);
+                    }
+                } else {
+                    return Redirect::back()->withErrors(['unitermo3'=>'O campo Palavra-chave 3 não pode ser repetido']);
+                }
             }
             if ($request->filled('unitermo4') && empty($unitermo4->id)) {
-                $mensagem.= "O Descritor 4 não foi alterado pois o selecionado foi excluído das opções do sistema.";
+                $mensagem.= "A Palavra Chave 4 não foi alterado pois o selecionado foi excluído das opções do sistema.";
                 $noDelete[] = $request->input('unitermo4');
             } elseif (!empty($unitermo4->id)) {
-                $unitermos[] = $unitermo4;
+                if ($unitermo4->unitermo <> $unitermo1->unitermo &&
+                    $unitermo4->unitermo <> $unitermo2->unitermo &&
+                    $unitermo4->unitermo <> $unitermo3->unitermo) {
+
+                    if((!empty($unitermo5->unitermo) && $unitermo4->unitermo <> $unitermo5->unitermo) ||
+                        (empty($unitermo5->unitermo))) {
+                        $unitermos[] = $unitermo4;
+                    }
+                }
             }
             if ($request->filled('unitermo5') && empty($unitermo5->id)) {
-                $mensagem.= "O Descritor 5 não foi alterado pois o selecionado foi excluído das opções do sistema.";
+                $mensagem.= "A Palavra Chave 5 não foi alterado pois o selecionado foi excluído das opções do sistema.";
                 $noDelete[] = $request->input('unitermo5');
             } elseif (!empty($unitermo5->id)) {
-                $unitermos[] = $unitermo5;
+                if ($unitermo5->unitermo <> $unitermo1->unitermo &&
+                    $unitermo5->unitermo <> $unitermo2->unitermo &&
+                    $unitermo5->unitermo <> $unitermo3->unitermo) {
+
+                    if((!empty($unitermo4->unitermo) && $unitermo5->unitermo <> $unitermo4->unitermo) ||
+                        (empty($unitermo4->unitermo))) {
+                        $unitermos[] = $unitermo5;
+                    }
+                }
+                
             }
 
             $numExcluidos = MonoUnitermos::excluirRegistroByMonografia($id, $noDelete);
@@ -634,6 +765,7 @@ class MonografiaController extends Controller
             }
 
             $assuntoMsg = null;
+            $txt = null;
             if (auth()->user()->hasRole('aluno') && $envioEmailOrientador) {
                 //enviar e-mail para o orientador caso exista alguma avaliação
                 $mensagem = "Monografia corrigida e enviada para aprovação do Orientador";

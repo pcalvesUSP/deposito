@@ -55,8 +55,9 @@
 
     $( document ).ready(function(){
 
-        $("#filtro").keyup(function() {
-            if ($(this).val().length > 3) {
+        $("#filtro").keyup(function( event ) {
+            if (event.which == 13) {
+            //if ($(this).val().length > 3) {
                 document.getElementById("filtrarOrientador").submit();
             }
         });

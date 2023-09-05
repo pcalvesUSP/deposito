@@ -12,9 +12,12 @@
     </div>
     <div id="divExt" style="display:none">
         <label for="cpfOrientador">CPF (Somente n&uacute;meros): </label><input type="text" class="inputBorder" style="left:5px;" name="cpfOrientador" id="cpfOrientador" size="20" value="{{ (isset($objOrientador)?$objOrientador->CPF:old('cpfOrientador')) }}" @if (isset($objOrientador)) disabled @endif><br>
+        <div class="erro">{{  $errors->has('cpfOrientador') ? $errors->first('cpfOrientador'):null }}</div>
     </div>
     <label for="nomeOrientador">Nome: </label><input type="text" class="inputBorder" style="left:136px;" name="nomeOrientador" id="nomeOrientador" size="50" value="{{ (isset($objOrientador)?$objOrientador->nome:old('nomeOrientador')) }}" required><br>
+    <div class="erro">{{  $errors->has('nomeOrientador') ? $errors->first('nomeOrientador'):null }}</div>
     <label for="emailOrientador">E-mail: </label><input type="text" class="inputBorder" style="left:133px;" name="emailOrientador" id="emailOrientador" size="50" value="{{ (isset($objOrientador)?$objOrientador->email:old('emailOrientador')) }}" required><br>
+    <div class="erro">{{  $errors->has('emailOrientador') ? $errors->first('emailOrientador'):null }}</div>
     <input type="submit" id="buttonSubmit" value="@if (isset($objOrientador)) Alterar @else Cadastrar @endif"/>
     @if (isset($objOrientador)) <button id="buttonSubmit" style="width:auto;border:none;" onclick="windows.location='{{ route('orientador.index') }}'">Cancelar</button> @endif
 </form>

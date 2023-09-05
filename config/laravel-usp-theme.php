@@ -56,7 +56,7 @@ $graduacao = [
         'can' => 'userGraduacao'
     ],
     [
-        'text' => 'Cadastro de Unitermos',
+        'text' => 'Cadastro de Palavras-Chave',
         'url' => '/graduacao/unitermos',
         'can' => 'userGraduacao'
     ],
