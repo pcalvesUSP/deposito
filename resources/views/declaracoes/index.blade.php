@@ -18,6 +18,7 @@
     @csrf
     Relatório Alunos-Orientadores -> Ano: 
     <select name="ano_aluno_orientador" id="ano_aluno_orientador">
+    <option value="">Selecione</option>
     @foreach ($anosCadastrados as $ano)
       <option value="{{ $ano->ano }}">{{ $ano->ano }}</option>  
     @endforeach
@@ -31,6 +32,7 @@
     @csrf
     Relatório Publicação BDTA -> Ano: 
     <select name="ano_publicacao" id="ano_publicacao">
+    <option value="">Selecione</option>
     @foreach ($anosCadastrados as $ano)
       <option value="{{ $ano->ano }}">{{ $ano->ano }}</option>  
     @endforeach
@@ -44,6 +46,7 @@
     @csrf
     Relatório para Emissão de Certificado -> Ano: 
     <select name="ano_emissao" id="ano_emissao">
+    <option value="">Selecione</option>
     @foreach ($anosCadastrados as $ano)
       <option value="{{ $ano->ano }}">{{ $ano->ano }}</option>  
     @endforeach
@@ -55,15 +58,15 @@
     <script>
       $( document ).ready(function(){
 
-        $('#ano_aluno_orientador').click(function() {
+        $('#ano_aluno_orientador').on("change",function() {
           $('#relatorioAlunoOrientador').submit();
         });
 
-        $('#ano_publicacao').click(function() {
+        $('#ano_publicacao').on("change",function() {
           $('#relatorioPublicacao').submit();
         });
 
-        $('#ano_emissao').click(function() {
+        $('#ano_emissao').on("change",function() {
           $('#relatorioEmissaoCert').submit();
         });
 

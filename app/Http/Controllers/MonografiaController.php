@@ -365,25 +365,42 @@ class MonografiaController extends Controller
             $monografia->areastematicas_id = $request->input('cod_area_tematica');
             $monografia->ano = date('Y');
 
-            $monografia->save();
+            if (!$monografia->save()) {
+                return Redirect::back()->withInputs()->withErrors(['orientador_id'=>'Erro ao salvar o registro da monografia']);
+            }
 
-            $aluno = new Aluno;
-            $aluno->id = auth()->user()->codpes;
-            $aluno->nome = auth()->user()->name;
-            $aluno->monografia_id = $monografia->id;
-
-            $aluno->firstOrCreate(['id'=>auth()->user()->codpes]
-                                 ,['id'=>auth()->user()->codpes
-                                  ,'nome'=>auth()->user()->name
-                                  ,'monografia_id'=>$monografia->id]);
+            $aluno = Aluno::find(auth()->user()->codpes);
+            $saveAluno = 1;
+            if (empty($aluno->id)) {
+                $aluno = new Aluno;
+                $aluno->id = auth()->user()->codpes;
+                $aluno->nome = auth()->user()->name;
+                $aluno->monografia_id = $monografia->id;
+                $saveAluno = $aluno->save();
+            }
+            
+            if (!$saveAluno) {
+                $monografia->delete();
+                return Redirect::back()->withInputs()->withErrors(['orientador_id'=>'Erro ao salvar o registro do aluno']);
+            }
 
             if (!empty($request->input('dupla')) && $request->input('dupla') == 1) {
                 $dadosAlunoDupla = Aluno::getDadosAluno($request->input('pessoaDupla'));
+                
+                $aluno = Aluno::find($request->input('pessoaDupla'));
+                $saveAluno = 1;
+                if (empty($aluno->id)) {
+                    $aluno = new Aluno;
+                    $aluno->id = $request->input('pessoaDupla');
+                    $aluno->nome = $dadosAlunoDupla[0]->nome;
+                    $aluno->monografia_id = $monografia->id;
+                    $saveAluno = $aluno->save();
+                }
 
-                $aluno->firstOrCreate(['id'=>$request->input('pessoaDupla')]
-                                     ,['id'=>$request->input('pessoaDupla')
-                                     ,'nome'=>$dadosAlunoDupla[0]->nome
-                                     ,'monografia_id'=>$monografia->id]);
+                if (!$saveAluno) {
+                    $monografia->delete();
+                    return Redirect::back()->withInputs()->withErrors(['orientador_id'=>'Erro ao salvar o registro da dupla do aluno']);
+                }               
             }
 
             $orientadores = array();

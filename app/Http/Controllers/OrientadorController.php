@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Redirect;
 
 use App\Models\Orientador;
 use App\Models\Replicado;
@@ -390,17 +391,20 @@ class OrientadorController extends Controller
         $avaliacao->dataAvaliacao   = date_create('now');
         $avaliacao->status          = $request->input('acao');
         $avaliacao->parecer         = $request->input('parecer');
-        $avaliacao->save();
+        
+        if (!$avaliacao->save()) {
+            if ($request->input('acao') == "APROVADO")
+                return Redirect::back()->withInputs()->withErrors(['publicar'=>'Erro ao salvar o registro da avaliação']);
+            else
+                return Redirect::back()->withInputs()->withErrors(['parecer'=>'Erro ao salvar o registro da avaliação']);
+        }
 
         $dadosMonografia = Monografia::where('id',$request->input('monografiaId'))->get();
         $dadosOrientador = Orientador::find($request->input('orientadorId'));
 
-        if (!empty($request->input('publicar'))) {
-            $monografia = $dadosMonografia->first();
-            $monografia->publicar = ($request->has('publicar'))?$request->input('publicar'):null;
-            $monografia->update();
-        }
-
+        $monografia = $dadosMonografia->first();
+        $monografia->publicar = $request->has('publicar');
+        
         //enviar e-mail
         $textoMensagem = null;
         if ($request->input('acao') == "DEVOLVIDO") {
@@ -412,9 +416,7 @@ class OrientadorController extends Controller
             ";
             $textoMensagem.= "Clique no botão abaixo para acessar o sistema e efetuar a correção.                         ";
         } elseif ($request->input('acao') == "REPROVADO") {
-            $objMonografia = Monografia::find($request->input('monografiaId'));
-            $objMonografia->status = "CONCLUIDO";
-            $objMonografia->update();
+            $monografia->status = "CONCLUIDO";
             
             $textoMensagem = "A monografia título **".$dadosMonografia->first()->titulo."** foi reprovada.             
             ";
@@ -422,10 +424,8 @@ class OrientadorController extends Controller
             ";
             $textoMensagem.= "**MOTIVO:** *".$request->input('parecer')."*                       ";
         } elseif ($request->input('acao') == "APROVADO") {
-            $objMonografia = Monografia::find($request->input('monografiaId'));
-            $objMonografia->status = "CONCLUIDO";
-            $objMonografia->update();
-
+            $monografia->status = "CONCLUIDO";
+            
             $textoMensagem = "**PARABÉNS!!!**                                                            
             ";
             $textoMensagem.= "A monografia título **".$dadosMonografia->first()->titulo."** foi aprovada.         
@@ -433,6 +433,10 @@ class OrientadorController extends Controller
             $textoMensagem.= "Orientador responsável: **".$dadosOrientador->nome."**                   ";            
         }
         
+        if (!$monografia->update()) {
+            print "<script>alert('Erro ao salvar o status da monografia. Entre em contato com a Graduação'); </script>";
+        }
+
         if (!empty($textoMensagem)) {
             foreach($dadosMonografia->first()->alunos()->get() as $key=>$aluno) {
                 $email = Pessoa::emailusp($aluno->id);

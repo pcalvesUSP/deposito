@@ -99,6 +99,11 @@ $(document).ready(function(){
         }
     });
 
+    $('#buttonSubmit').click(function() {
+        $(this).prop('disabled','true');
+        $('#formMonografia').submit();
+    });
+
     var $disabledResults = $(".js-example-disabled-results");
     $disabledResults.select2();
 
