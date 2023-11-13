@@ -24,7 +24,7 @@
         <textarea id="textParecer" name="parecer" style="width: 100%;height: 150px;">{{ trim(old('textPArecer')) }}</textarea>
         <div class="erro" id="erroparecer">{{  $errors->has('parecer') ? $errors->first('parecer'):null }}</div>
     </div>
-    <input type="submit" id="buttonSubmit" value="Enviar">
+    <input type="submit" id="btAvaliacao" value="Enviar">
 </form>
 
 <script src="js/avaliacao.js"></script>
