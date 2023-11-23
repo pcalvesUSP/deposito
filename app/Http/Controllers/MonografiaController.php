@@ -155,7 +155,7 @@ class MonografiaController extends Controller
                 $nomeAluno = auth()->user()->name;
             } elseif (auth()->user()->hasRole('orientador') && !auth()->user()->can('admin')) {
 
-                $ddOrientador = Orientador::where('codpes',auth()->user()->codpes)->get();
+                $ddOrientador = Orientador::where('email',auth()->user()->email)->get();
                 if (MonoOrientadores::where('orientadores_id',$ddOrientador->first()->id)->where('monografia_id',$dadosMonografia->first()->id)->count() == 0) {
                     return "<script> alert('M5-Monografia não está sob sua orientação. Entre em contato com a Graduação'); 
                                      window.location.assign('".route('home')."');
@@ -258,7 +258,7 @@ class MonografiaController extends Controller
         }
         
         $listaAlunosDupla = Aluno::getDadosAluno();
-        $listaOrientadores = Orientador::where('nome','like','%')->orderBy('nome')->get();
+        $listaOrientadores = Orientador::orderBy('nome')->get();
 
         $parametros = ["numUSPAluno"        => $numUSPAluno
                       ,"nomeAluno"          => $nomeAluno
@@ -559,6 +559,8 @@ class MonografiaController extends Controller
         } catch (Exception $e) {
             $mensagem = "Erro no cadastro da Monografia. ".$e->message();
         }
+
+        print "<script>alert('$mensagem');</script>";
 
         return redirect()->route('alunos.index', 
                                 ['monografiaId' => $monografia->id
